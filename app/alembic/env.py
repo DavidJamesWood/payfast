@@ -17,7 +17,7 @@ if db_url:
 
 # ---- import your models.Base ----
 try:
-    from models import Base  # app/models.py
+    from models_rich import Base  # app/models_rich.py (comprehensive models)
     target_metadata = Base.metadata
 except Exception as e:
     raise RuntimeError(f"Could not import Base for Alembic: {e}")

@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, Header, Query
 from sqlalchemy.orm import Session
 from pathlib import Path
 from db import get_db
-from services.reconcile import run_reconciliation
-from models import ReconciliationItem, AchTransfer
+from services.reconcile import run_reconciliation, get_reconciliation_items
+from models_rich import ReconciliationItem, AchTransfer
 from decorators import audit_log
 
 router = APIRouter(prefix="/api/tenants/{tenant_id}", tags=["reconcile"])
@@ -26,6 +26,7 @@ def list_items(
     tenant_id: str,
     run_id: int,
     issue_type: str | None = Query(None),
+    employee_ext_id: str | None = Query(None),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
     x_tenant_id: str = Header(alias="X-Tenant-ID"),
@@ -34,20 +35,27 @@ def list_items(
     if tenant_id != x_tenant_id:
         raise HTTPException(400, "Tenant mismatch")
     
-    q = db.query(ReconciliationItem).filter(ReconciliationItem.run_id == run_id)
-    if issue_type:
-        q = q.filter(ReconciliationItem.issue_type == issue_type)
-    
-    # Add pagination
     offset = (page - 1) * limit
-    items = q.offset(offset).limit(limit).all()
     
-    return [  # minimal projection
-        dict(
-            id=i.id, employee_ext_id=i.employee_ext_id, issue_type=i.issue_type,
-            expected_pct=i.expected_pct, actual_pct=i.actual_pct, amount=i.amount
-        ) for i in items
-    ]
+    result = get_reconciliation_items(
+        db=db,
+        run_id=run_id,
+        tenant_id=tenant_id,
+        issue_type=issue_type,
+        employee_ext_id=employee_ext_id,
+        limit=limit,
+        offset=offset
+    )
+    
+    return {
+        "items": result["items"],
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total_count": result["total_count"],
+            "total_pages": (result["total_count"] + limit - 1) // limit
+        }
+    }
 
 @router.post("/reconcile/{run_id}/approve")
 @audit_log(action="create", entity="ach_transfer")

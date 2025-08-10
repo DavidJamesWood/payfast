@@ -23,6 +23,9 @@ class PayItem(Base):
     payroll_batch_id: Mapped[int] = mapped_column(ForeignKey("payroll_batch.id"))
     employee_id: Mapped[Optional[int]] = mapped_column(nullable=True)
     employee_ext_id: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    period_start: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    period_end: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    memo: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     code: Mapped[str]
     amount: Mapped[float] = mapped_column(Float)
     contribution_pct: Mapped[float] = mapped_column(Float)

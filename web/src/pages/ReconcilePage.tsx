@@ -8,7 +8,7 @@ import {
   ArrowDownTrayIcon
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import { apiClient, ReconciliationItem, PayrollBatch } from '../lib/api';
+import { apiClient, ReconciliationItem, PayrollBatch, ReconciliationItemsResponse } from '../lib/api';
 
 interface SummaryStats {
   ok: number;
@@ -22,6 +22,7 @@ export default function ReconcilePage() {
   const [selectedBatch, setSelectedBatch] = useState<number | null>(null);
   const [reconciliationRun, setReconciliationRun] = useState<any>(null);
   const [items, setItems] = useState<ReconciliationItem[]>([]);
+  const [pagination, setPagination] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isRunningReconciliation, setIsRunningReconciliation] = useState(false);
   const [filters, setFilters] = useState({
@@ -64,8 +65,13 @@ export default function ReconcilePage() {
   const loadItems = async (runId: number) => {
     setIsLoading(true);
     try {
-      const data = await apiClient.getReconciliationItems(runId, filters.issueType);
-      setItems(data);
+      const data = await apiClient.getReconciliationItems(
+        runId, 
+        filters.issueType, 
+        filters.employee || undefined
+      );
+      setItems(data.items);
+      setPagination(data.pagination);
     } catch (error) {
       toast.error('Failed to load reconciliation items');
     } finally {
@@ -295,6 +301,9 @@ export default function ReconcilePage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Amount
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Details
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -325,6 +334,22 @@ export default function ReconcilePage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {item.amount ? `$${item.amount.toFixed(2)}` : '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div className="max-w-xs">
+                          {item.details ? (
+                            <details className="group">
+                              <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium">
+                                View Context
+                              </summary>
+                              <div className="mt-2 p-3 bg-gray-50 rounded text-xs">
+                                <pre className="whitespace-pre-wrap">{item.details}</pre>
+                              </div>
+                            </details>
+                          ) : (
+                            <span className="text-gray-400">No details</span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

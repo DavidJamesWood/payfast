@@ -43,6 +43,15 @@ export interface ReconciliationItem {
   expected_pct: number | null;
   actual_pct: number | null;
   amount: number | null;
+  details?: string;
+  created_at?: string;
+}
+
+export interface ReconciliationItemsResponse {
+  items: ReconciliationItem[];
+  total_count: number;
+  limit: number;
+  offset: number;
 }
 
 export interface AchTransfer {
@@ -97,12 +106,16 @@ export const apiClient = {
   getReconciliationItems: async (
     runId: number, 
     issueType?: string,
+    employeeExtId?: string,
     page: number = 1,
     limit: number = 20
-  ): Promise<ReconciliationItem[]> => {
+  ): Promise<ReconciliationItemsResponse> => {
     let url = `/api/tenants/demo-tenant-1/reconcile/${runId}/items?page=${page}&limit=${limit}`;
     if (issueType) {
       url += `&issue_type=${issueType}`;
+    }
+    if (employeeExtId) {
+      url += `&employee_ext_id=${employeeExtId}`;
     }
     const response = await api.get(url);
     return response.data;
