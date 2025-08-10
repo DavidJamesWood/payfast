@@ -81,6 +81,33 @@ def tool_approve_run(run_id:int, dry_run:bool=True, tenant_id:str="demo-tenant-1
     # Keep it dry-run by default for safety in the demo.
     return result
 
+def tool_execute_sql(sql: str, tenant_id: str = "demo-tenant-1") -> Dict[str, Any]:
+    """Execute arbitrary SQL query safely"""
+    try:
+        with engine.connect() as c:
+            result = c.execute(text(sql))
+            if result.returns_rows:
+                rows = result.mappings().all()
+                return {
+                    "success": True,
+                    "row_count": len(rows),
+                    "data": [dict(row) for row in rows],
+                    "sql": sql
+                }
+            else:
+                return {
+                    "success": True,
+                    "row_count": result.rowcount,
+                    "data": [],
+                    "sql": sql
+                }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "sql": sql
+        }
+
 # ---------- Minimal JSON-RPC loop ----------
 class JsonRpcRequest(BaseModel):
     jsonrpc: str
@@ -101,6 +128,7 @@ TOOLS = {
     "get_reconciliation_summary": tool_get_reconciliation_summary,
     "list_items": tool_list_items,
     "approve_run": tool_approve_run,
+    "execute_sql": tool_execute_sql,
 }
 
 def main():
