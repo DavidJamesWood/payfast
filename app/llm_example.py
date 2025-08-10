@@ -3,8 +3,7 @@ Example of how to use LLM configuration in your PayFast application.
 """
 
 from config import settings
-import httpx
-import json
+from openai import AsyncOpenAI
 
 class LLMService:
     """Service for interacting with LLM providers."""
@@ -16,6 +15,12 @@ class LLMService:
         
         if not self.api_key:
             raise ValueError("OpenAI API key not configured. Please set OPENAI_API_KEY in your .env file.")
+        
+        # Initialize OpenAI client
+        if self.provider.lower() == "openai":
+            self.client = AsyncOpenAI(api_key=self.api_key)
+        else:
+            raise ValueError(f"Unsupported LLM provider: {self.provider}")
     
     async def generate_response(self, prompt: str) -> str:
         """Generate a response using the configured LLM."""
@@ -25,27 +30,19 @@ class LLMService:
             raise ValueError(f"Unsupported LLM provider: {self.provider}")
     
     async def _call_openai(self, prompt: str) -> str:
-        """Call OpenAI API."""
-        url = "https://api.openai.com/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        data = {
-            "model": self.model,
-            "messages": [
-                {"role": "user", "content": prompt}
-            ],
-            "max_tokens": 1000,
-            "temperature": 0.7
-        }
-        
-        async with httpx.AsyncClient() as client:
-            response = await client.post(url, headers=headers, json=data)
-            response.raise_for_status()
-            
-            result = response.json()
-            return result["choices"][0]["message"]["content"]
+        """Call OpenAI API using the official client."""
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=1000,
+                temperature=0.7
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            raise ValueError(f"OpenAI API error: {str(e)}")
 
 # Example usage in your FastAPI endpoints:
 """
