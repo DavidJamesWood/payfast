@@ -78,6 +78,27 @@ export interface AuditSummary {
   count: number;
 }
 
+export interface LLMOrchestrationRequest {
+  query: string;
+  self_correct: boolean;
+  include_summary: boolean;
+  max_retries: number;
+}
+
+export interface LLMOrchestrationResponse {
+  sql_query: string;
+  mcp_result: {
+    success: boolean;
+    data?: any[];
+    row_count?: number;
+    execution_time?: number;
+    error?: string;
+  };
+  summary: string;
+  corrections_made: number;
+  final_success: boolean;
+}
+
 export const apiClient = {
   // Payroll
   uploadPayroll: async (file: File): Promise<{ batch_id: number; rows: number }> => {
@@ -170,6 +191,12 @@ export const apiClient = {
       { id: 'demo-tenant-2', name: 'Test Corp' },
       { id: 'demo-tenant-3', name: 'Sample LLC' },
     ];
+  },
+
+  // LLM Orchestration
+  llmOrchestrate: async (request: LLMOrchestrationRequest, signal?: AbortSignal): Promise<LLMOrchestrationResponse> => {
+    const response = await api.post('/api/mcp/llm-orchestrate', request, { signal });
+    return response.data;
   },
 };
 

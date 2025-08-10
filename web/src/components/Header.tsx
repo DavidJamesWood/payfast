@@ -5,7 +5,8 @@ import {
   CheckCircleIcon,
   ChevronDownIcon,
   ClipboardDocumentListIcon,
-  CommandLineIcon
+  CommandLineIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
 import { Listbox } from '@headlessui/react';
 
@@ -13,6 +14,7 @@ interface HeaderProps {
   selectedTenant: string;
   onTenantChange: (tenantId: string) => void;
   tenants: { id: string; name: string }[];
+  onChatToggle: () => void;
 }
 
 const navigation = [
@@ -23,7 +25,7 @@ const navigation = [
   { name: 'MCP Tools', href: '/mcp-tools', icon: CommandLineIcon },
 ];
 
-export default function Header({ selectedTenant, onTenantChange, tenants }: HeaderProps) {
+export default function Header({ selectedTenant, onTenantChange, tenants, onChatToggle }: HeaderProps) {
   const location = useLocation();
   const selectedTenantData = tenants.find(t => t.id === selectedTenant);
 
@@ -83,6 +85,15 @@ export default function Header({ selectedTenant, onTenantChange, tenants }: Head
                 </Link>
               );
             })}
+            
+            {/* Chat Button */}
+            <button
+              onClick={onChatToggle}
+              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all duration-200"
+            >
+              <ChatBubbleLeftRightIcon className="h-4 w-4" />
+              <span>AI Chat</span>
+            </button>
           </nav>
         </div>
       </div>

@@ -137,34 +137,60 @@ async def llm_orchestrate_mcp(
         sql_prompt = f"""
         You are a SQL expert. Write a PostgreSQL query to answer this question: "{request.query}"
         
-        Available tables in the database:
-        - payroll_batch (not payroll_batches)
-        - pay_item
-        - employee
-        - dependent
-        - plan
-        - enrollment
-        - reconciliation_run
-        - reconciliation_item
-        - ach_transfer
-        - audit_log
-        - event_log
-        - system_config
-        - tenant
+        Available tables and their key columns:
+        - payroll_batch (id, tenant_id, period_start, period_end, source, uploaded_by, status, created_at, updated_at)
+        - pay_item (id, tenant_id, payroll_batch_id, employee_id, employee_ext_id, code, amount, contribution_pct, period_start, period_end, memo, created_at)
+        - employee (id, tenant_id, employee_ext_id, first_name, last_name, email, phone, hire_date, termination_date, is_active, created_at, updated_at)
+        - reconciliation_item (id, run_id, employee_ext_id, issue_type, expected_pct, actual_pct, amount, details, created_at)
+        - reconciliation_run (id, tenant_id, status, created_at)
+        - plan (id, tenant_id, plan_code, plan_name, plan_type, carrier, is_active, created_at, updated_at)
+        - enrollment (id, tenant_id, employee_id, plan_id, dependent_id, effective_from, effective_to, contribution_pct, contribution_amount, coverage_level, is_active, created_at, updated_at)
+        - dependent (id, tenant_id, employee_id, first_name, last_name, relationship, created_at)
+        
+        Key relationships:
+        - reconciliation_item.run_id → reconciliation_run.id
+        - pay_item.employee_id → employee.id
+        - pay_item.employee_ext_id = reconciliation_item.employee_ext_id (for matching)
+        - enrollment.employee_id → employee.id
+        - enrollment.plan_id → plan.id
+        - enrollment.dependent_id → dependent.id (optional)
+        - dependent.employee_id → employee.id
+        
+        Important notes:
+        - Always filter by tenant_id = '{x_tenant_id}' for tenant-specific data
+        - Use employee_ext_id to join between pay_item and reconciliation_item
+        - The reconciliation_item table uses 'run_id' (not 'reconciliation_run_id')
+        - Pay items are linked to employees via employee_id
+        - Enrollments link employees to plans via employee_id and plan_id
+        - For mismatches, look at reconciliation_item.amount or (actual_pct - expected_pct)
         
         Requirements:
         - Return ONLY the SQL query, no explanations
         - Use proper PostgreSQL syntax
-        - Use the exact table names listed above
+        - Use the exact table names and column names listed above
         - Make the query efficient and readable
+        - You can use CTEs (WITH clauses) for complex queries
+        - For "most recent" queries, use CTEs to find the latest records first
         
         SQL Query:
         """
         
-        sql_response = client.chat.completions.create(
-            model=MODEL,
-            messages=[{"role": "user", "content": sql_prompt}]
-        )
+        # Add timeout for LLM call (10 seconds)
+        import asyncio
+        import concurrent.futures
+        
+        def call_llm_with_timeout():
+            return client.chat.completions.create(
+                model=MODEL,
+                messages=[{"role": "user", "content": sql_prompt}]
+            )
+        
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(call_llm_with_timeout)
+            try:
+                sql_response = future.result(timeout=30)  # 30 second timeout
+            except concurrent.futures.TimeoutError:
+                raise Exception("LLM request timed out after 30 seconds")
         
         sql_query = sql_response.choices[0].message.content.strip()
         
@@ -188,7 +214,16 @@ async def llm_orchestrate_mcp(
                     }
                 )
                 
-                mcp_response = call_mcp_server(mcp_request, x_tenant_id, db)
+                # Add timeout for MCP call (15 seconds total)
+                def call_mcp_with_timeout():
+                    return call_mcp_server(mcp_request, x_tenant_id, db)
+                
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(call_mcp_with_timeout)
+                    try:
+                        mcp_response = future.result(timeout=45)  # 45 second timeout for MCP
+                    except concurrent.futures.TimeoutError:
+                        raise Exception("MCP request timed out after 45 seconds")
                 
                 if mcp_response.error:
                     raise Exception(f"MCP Error: {mcp_response.error}")
@@ -214,10 +249,18 @@ async def llm_orchestrate_mcp(
                     Return ONLY the corrected SQL query:
                     """
                     
-                    correction_response = client.chat.completions.create(
-                        model=MODEL,
-                        messages=[{"role": "user", "content": correction_prompt}]
-                    )
+                    def call_llm_correction_with_timeout():
+                        return client.chat.completions.create(
+                            model=MODEL,
+                            messages=[{"role": "user", "content": correction_prompt}]
+                        )
+                    
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future = executor.submit(call_llm_correction_with_timeout)
+                        try:
+                            correction_response = future.result(timeout=30)  # 30 second timeout
+                        except concurrent.futures.TimeoutError:
+                            raise Exception("LLM correction request timed out after 30 seconds")
                     
                     sql_query = correction_response.choices[0].message.content.strip()
                     
@@ -246,10 +289,18 @@ async def llm_orchestrate_mcp(
             Provide a concise summary (2-3 sentences):
             """
             
-            summary_response = client.chat.completions.create(
-                model=MODEL,
-                messages=[{"role": "user", "content": summary_prompt}]
-            )
+            def call_llm_summary_with_timeout():
+                return client.chat.completions.create(
+                    model=MODEL,
+                    messages=[{"role": "user", "content": summary_prompt}]
+                )
+            
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(call_llm_summary_with_timeout)
+                try:
+                    summary_response = future.result(timeout=30)  # 30 second timeout
+                except concurrent.futures.TimeoutError:
+                    raise Exception("LLM summary request timed out after 30 seconds")
             
             summary = summary_response.choices[0].message.content.strip()
         

@@ -82,24 +82,103 @@ def tool_approve_run(run_id:int, dry_run:bool=True, tenant_id:str="demo-tenant-1
     return result
 
 def tool_execute_sql(sql: str, tenant_id: str = "demo-tenant-1") -> Dict[str, Any]:
-    """Execute arbitrary SQL query safely"""
+    """Execute arbitrary SQL query safely with guardrails"""
+    import re
+    import time
+    
+    # Guardrail 1: SELECT-only queries (including CTEs)
+    sql_upper = sql.strip().upper()
+    if not (sql_upper.startswith("SELECT") or sql_upper.startswith("WITH")):
+        return {
+            "success": False,
+            "error": "Only SELECT queries and CTEs are allowed for security",
+            "sql": sql
+        }
+    
+    # Guardrail 2: Check for dangerous keywords (word boundaries)
+    dangerous_keywords = [
+        "DROP", "DELETE", "UPDATE", "INSERT", "CREATE", "ALTER", "TRUNCATE",
+        "EXEC", "EXECUTE", "CALL", "PROCEDURE"
+    ]
+    for keyword in dangerous_keywords:
+        # Use word boundaries to avoid false positives (e.g., "COALESCE" containing "CREATE")
+        pattern = r'\b' + re.escape(keyword) + r'\b'
+        if re.search(pattern, sql_upper):
+            return {
+                "success": False,
+                "error": f"Query contains forbidden keyword: {keyword}",
+                "sql": sql
+            }
+    
+    # Guardrail 3: Auto-add LIMIT if not present
+    if "LIMIT" not in sql_upper:
+        # Find the end of the query (before any comments)
+        sql_clean = re.sub(r'--.*$', '', sql, flags=re.MULTILINE).strip()
+        if not sql_clean.endswith(';'):
+            sql_clean += ';'
+        sql = sql_clean[:-1] + " LIMIT 1000;"
+    
+    # Guardrail 4: Auto-add tenant filter if tenant_id column exists
+    # This is a simplified check - in production you'd want more sophisticated tenant isolation
+    if "tenant_id" not in sql_upper and tenant_id:
+        # Try to add tenant_id filter to the first table in FROM clause
+        from_match = re.search(r'FROM\s+(\w+)', sql_upper)
+        if from_match:
+            table_name = from_match.group(1)
+            # Check if table has tenant_id column (simplified)
+            if table_name in ["PAYROLL_BATCH", "PAY_ITEM", "EMPLOYEE", "DEPENDENT", "PLAN", "ENROLLMENT"]:
+                # Add tenant_id filter
+                if "WHERE" in sql_upper:
+                    sql = re.sub(r'WHERE\s+', f"WHERE {table_name.lower()}.tenant_id = '{tenant_id}' AND ", sql, flags=re.IGNORECASE)
+                else:
+                    sql = re.sub(r'FROM\s+(\w+)', f"FROM {from_match.group(1)} WHERE {table_name.lower()}.tenant_id = '{tenant_id}'", sql, flags=re.IGNORECASE)
+    
     try:
+        # Guardrail 5: Timeout for SQL execution (5 seconds)
+        start_time = time.time()
+        timeout_seconds = 5
+        
         with engine.connect() as c:
+            # Set statement timeout
+            c.execute(text("SET statement_timeout = 5000"))  # 5 seconds in milliseconds
+            
             result = c.execute(text(sql))
+            
+            # Check timeout
+            if time.time() - start_time > timeout_seconds:
+                return {
+                    "success": False,
+                    "error": f"Query execution timed out after {timeout_seconds} seconds",
+                    "sql": sql
+                }
+            
             if result.returns_rows:
                 rows = result.mappings().all()
+                # Convert rows to JSON-serializable format
+                serializable_data = []
+                for row in rows:
+                    row_dict = {}
+                    for key, value in row.items():
+                        if hasattr(value, 'isoformat'):  # Handle datetime objects
+                            row_dict[key] = value.isoformat()
+                        else:
+                            row_dict[key] = value
+                    serializable_data.append(row_dict)
+                
                 return {
                     "success": True,
                     "row_count": len(rows),
-                    "data": [dict(row) for row in rows],
-                    "sql": sql
+                    "data": serializable_data,
+                    "sql": sql,
+                    "execution_time": round(time.time() - start_time, 3)
                 }
             else:
                 return {
                     "success": True,
                     "row_count": result.rowcount,
                     "data": [],
-                    "sql": sql
+                    "sql": sql,
+                    "execution_time": round(time.time() - start_time, 3)
                 }
     except Exception as e:
         return {
