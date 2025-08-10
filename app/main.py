@@ -1,18 +1,16 @@
-from fastapi import FastAPI, Depends, Header, HTTPException
+from fastapi import FastAPI, Depends
 from pydantic import BaseModel
+from routers import payroll
+from dependencies import get_tenant_id
 
 app = FastAPI(title="PayFast API")
 
-# --- Tenancy stub ---
-
-def get_tenant_id(x_tenant_id: str | None = Header(None)):
-    if not x_tenant_id:
-        raise HTTPException(400, "Missing X-Tenant-ID")
-    return x_tenant_id
 
 @app.get("/healthz")
 def healthz():
     return {"ok": True}
+
+app.include_router(payroll.router)
 
 # --- DTOs (replace with real models/services later) ---
 class PayrollRow(BaseModel):

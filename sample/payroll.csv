@@ -1,0 +1,4 @@
+employee_ext_id,code,amount,contribution_pct
+E-1001,MED_PRETAX,150.00,0.03
+E-1002,MED_PRETAX,0.00,0.00
+E-1003,MED_PRETAX,200.00,0.04
