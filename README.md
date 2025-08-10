@@ -1,4 +1,19 @@
-# payfast
+# Payfast – Payroll Reconciliation MVP
+
+This is a minimal, demo-ready scaffold to show ingestion → reconciliation → approval. Flesh out details post-interview.
+
+## Quick start (local)
+
+```bash
+# 0) prerequisites: Docker Desktop, Node 20, Python 3.11, Azure CLI
+
+# 1) install web deps once (Vite skeleton)
+cd web && npm i && cd ..
+
+# 2) build and run
+docker compose build
+docker compose up
+# web: http://localhost:5173  | api: http://localhost:8000/docs
 
 ## Repository Structure
 
