@@ -3,13 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from routers import payroll, reconcile, audit, mcp
 from dependencies import get_tenant_id
+from config import settings
 
 app = FastAPI(title="PayFast API")
 
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # Frontend URLs
+    allow_origins=settings.ALLOWED_ORIGINS,  # From environment variables
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

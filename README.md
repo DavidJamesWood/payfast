@@ -8,6 +8,23 @@ A modern, beautiful payroll reconciliation system with drag-and-drop file upload
 - Docker & Docker Compose
 - Node.js 18+ (for local development)
 
+### Environment Setup
+Before starting the application, you need to set up your environment variables:
+
+```bash
+# Navigate to the app directory
+cd app
+
+# Run the setup script to create a .env file with secure defaults
+python setup_env.py
+
+# Or manually copy the example and edit it
+cp .env.example .env
+# Edit .env with your actual values
+```
+
+See [app/ENV_SETUP.md](app/ENV_SETUP.md) for detailed environment configuration instructions.
+
 ### Start the Application
 ```bash
 # Clone and start all services
