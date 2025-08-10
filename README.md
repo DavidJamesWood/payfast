@@ -21,6 +21,73 @@ docker compose up -d
 # API Docs: http://localhost:8000/docs
 ```
 
+## 🛠️ Makefile Commands
+
+The project includes a comprehensive Makefile for easy development workflow:
+
+```bash
+# Show all available commands
+make help
+
+# Quick development setup (build, start, migrate, seed)
+make dev
+
+# Service management
+make up          # Start all services
+make down        # Stop all services
+make restart     # Restart all services
+make build       # Build all containers
+
+# Logs and monitoring
+make logs        # View all logs
+make api-logs    # View API logs only
+make web-logs    # View frontend logs only
+make monitor     # System resource monitoring
+
+# Database operations
+make migrate     # Run database migrations
+make seed        # Seed with sample data
+make db-reset    # Reset database completely
+
+# Testing
+make test-upload     # Test payroll upload API
+make test-reconcile  # Test reconciliation (usage: make test-reconcile batch_id=1)
+make test-audit      # Test audit log API
+make test-audit-summary # Test audit summary API
+
+# Development utilities
+make shell-api   # Access API container
+make shell-web   # Access frontend container
+make shell-db    # Access database
+make health      # Check all services health
+make status      # Show container status
+
+# Code quality
+make format      # Format code (Python + TypeScript)
+make lint        # Lint code
+make check       # Run all quality checks
+
+# Complete workflow
+make workflow    # Full development workflow with instructions
+```
+
+### Quick Development Workflow
+```bash
+# 1. Set up everything
+make dev
+
+# 2. Test the system
+make test-upload
+make test-reconcile batch_id=1
+make test-audit
+
+# 3. Monitor logs
+make api-logs
+
+# 4. Access containers for debugging
+make shell-api
+```
+
 ## ✨ Features
 
 ### 🎨 Beautiful Modern UI
@@ -52,6 +119,13 @@ docker compose up -d
 - **Isolated Data**: Each tenant sees only their data
 - **Persistent Selection**: Remembers your tenant choice
 
+### 📊 Audit Log System
+- **Complete Activity Tracking**: All system actions logged automatically
+- **Advanced Filtering**: Filter by entity, action, actor, and time
+- **Summary Statistics**: Visual overview of audit activity
+- **Detail View**: View before/after states for changes
+- **Compliance Ready**: Full audit trail for regulatory requirements
+
 ## 🏗️ Architecture
 
 ```
@@ -72,7 +146,8 @@ payfast/
 │   └── tailwind.config.js # Styling configuration
 ├── ops/                   # Infrastructure (Bicep)
 ├── .github/workflows/     # CI/CD pipelines
-└── docker-compose.yml     # Local development
+├── docker-compose.yml     # Local development
+└── Makefile              # Development commands
 ```
 
 ## 🛠️ Technology Stack
@@ -97,6 +172,7 @@ payfast/
 - **Docker**: Containerized development
 - **GitHub Actions**: Automated CI/CD
 - **Azure Bicep**: Infrastructure as Code
+- **Make**: Development workflow automation
 
 ## 📊 Data Models
 
