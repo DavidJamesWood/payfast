@@ -27,11 +27,13 @@ export interface PayrollBatch {
 }
 
 export interface ReconciliationRun {
-  id: number;
-  tenant_id: string;
-  created_at: string;
-  created_by: string;
-  status: string;
+  run_id: number;  // Changed from 'id' to 'run_id' to match API
+  summary: {
+    ok?: number;
+    mismatch_pct?: number;
+    missing_coverage?: number;
+    extra_deduction?: number;
+  };
 }
 
 export interface ReconciliationItem {

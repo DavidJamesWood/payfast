@@ -34,11 +34,10 @@ export default function ReviewPage() {
       // Mock data for now - we'll need to add this endpoint to the backend
       const mockRuns: PendingRun[] = [
         {
-          id: 1,
-          tenant_id: 'demo-tenant-1',
-          created_at: '2024-01-15T10:35:00Z',
-          created_by: 'demo-user',
-          status: 'completed',
+          run_id: 1,
+          summary: {
+            missing_coverage: 3
+          },
           itemCount: 3,
           totalAmount: 350.0
         }
@@ -61,12 +60,12 @@ export default function ReviewPage() {
 
     setIsApproving(true);
     try {
-      const transfer = await apiClient.approveReconciliation(selectedRun.id);
+      const transfer = await apiClient.approveReconciliation(selectedRun.run_id);
       setApprovedTransfer(transfer);
       toast.success(`Transfer #${transfer.transfer_id} approved successfully!`);
       
       // Remove from pending list
-      setPendingRuns(runs => runs.filter(r => r.id !== selectedRun.id));
+      setPendingRuns(runs => runs.filter(r => r.run_id !== selectedRun.run_id));
       
       setShowConfirmModal(false);
       setSelectedRun(null);
@@ -155,20 +154,20 @@ export default function ReviewPage() {
           <div className="space-y-4">
             {pendingRuns.map((run) => (
               <div
-                key={run.id}
+                key={run.run_id}
                 className="flex items-center justify-between p-6 bg-gray-50 rounded-lg border border-gray-200"
               >
                 <div className="flex items-center space-x-6">
                   <div className="flex items-center space-x-3">
                     <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
-                      <span className="text-primary-700 font-semibold">#{run.id}</span>
+                      <span className="text-primary-700 font-semibold">#{run.run_id}</span>
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">
-                        Reconciliation Run #{run.id}
+                        Reconciliation Run #{run.run_id}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        Created by {run.created_by} on {format(new Date(run.created_at), 'MMM d, yyyy h:mm a')}
+                        Items: {Object.values(run.summary).reduce((a, b) => a + b, 0)} discrepancies found
                       </p>
                     </div>
                   </div>
@@ -226,7 +225,7 @@ export default function ReviewPage() {
               <div className="mb-6 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Run ID:</span>
-                  <span className="font-medium">#{selectedRun.id}</span>
+                  <span className="font-medium">#{selectedRun.run_id}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Items:</span>

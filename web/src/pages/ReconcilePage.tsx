@@ -52,8 +52,8 @@ export default function ReconcilePage() {
     try {
       const run = await apiClient.runReconciliation(selectedBatch);
       setReconciliationRun(run);
-      toast.success(`Reconciliation completed! Run #${run.id}`);
-      await loadItems(run.id);
+      toast.success(`Reconciliation completed! Run #${run.run_id}`);
+      await loadItems(run.run_id);
     } catch (error) {
       toast.error('Failed to run reconciliation');
     } finally {
@@ -75,7 +75,7 @@ export default function ReconcilePage() {
 
   useEffect(() => {
     if (reconciliationRun) {
-      loadItems(reconciliationRun.id);
+      loadItems(reconciliationRun.run_id);
     }
   }, [reconciliationRun, filters]);
 
