@@ -14,6 +14,11 @@ import { apiClient, ReconciliationRun, AchTransfer } from '../lib/api';
 interface PendingRun extends ReconciliationRun {
   itemCount: number;
   totalAmount: number;
+  created_at?: string;
+  created_by?: string;
+  status?: string;
+  is_approved?: boolean;
+  ach_transfer_id?: number;
 }
 
 export default function ReviewPage() {
@@ -31,18 +36,19 @@ export default function ReviewPage() {
   const loadPendingRuns = async () => {
     setIsLoading(true);
     try {
-      // Mock data for now - we'll need to add this endpoint to the backend
-      const mockRuns: PendingRun[] = [
-        {
-          run_id: 1,
-          summary: {
-            missing_coverage: 3
-          },
-          itemCount: 3,
-          totalAmount: 350.0
-        }
-      ];
-      setPendingRuns(mockRuns);
+      const response = await apiClient.getReconciliationRuns();
+      const runs: PendingRun[] = response.runs.map((run: any) => ({
+        run_id: run.run_id,
+        summary: run.summary,
+        itemCount: run.item_count,
+        totalAmount: run.total_amount,
+        created_at: run.created_at,
+        created_by: run.created_by,
+        status: run.status,
+        is_approved: run.is_approved,
+        ach_transfer_id: run.ach_transfer_id
+      }));
+      setPendingRuns(runs);
     } catch (error) {
       toast.error('Failed to load pending reconciliations');
     } finally {
@@ -155,19 +161,31 @@ export default function ReviewPage() {
             {pendingRuns.map((run) => (
               <div
                 key={run.run_id}
-                className="flex items-center justify-between p-6 bg-gray-50 rounded-lg border border-gray-200"
+                className={`flex items-center justify-between p-6 rounded-lg border ${
+                  run.is_approved 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-gray-50 border-gray-200'
+                }`}
               >
                 <div className="flex items-center space-x-6">
                   <div className="flex items-center space-x-3">
-                    <div className="h-10 w-10 bg-primary-100 rounded-full flex items-center justify-center">
-                      <span className="text-primary-700 font-semibold">#{run.run_id}</span>
+                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                      run.is_approved ? 'bg-green-100' : 'bg-primary-100'
+                    }`}>
+                      <span className={`font-semibold ${
+                        run.is_approved ? 'text-green-700' : 'text-primary-700'
+                      }`}>#{run.run_id}</span>
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-900">
                         Reconciliation Run #{run.run_id}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        Items: {Object.values(run.summary).reduce((a, b) => a + b, 0)} discrepancies found
+                        {run.created_at && `Created ${new Date(run.created_at).toLocaleDateString()}`}
+                        {run.created_by && ` by ${run.created_by}`}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {Object.values(run.summary).reduce((a, b) => a + b, 0)} discrepancies found
                       </p>
                     </div>
                   </div>
@@ -181,16 +199,37 @@ export default function ReviewPage() {
                       <span className="text-gray-500">Total Amount:</span>
                       <span className="ml-1 font-medium text-gray-900">${run.totalAmount.toFixed(2)}</span>
                     </div>
+                    {run.is_approved && (
+                      <div className="flex items-center space-x-2">
+                        <CheckCircleIcon className="h-4 w-4 text-green-600" />
+                        <span className="text-green-600 font-medium">Approved</span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
-                <button
-                  onClick={() => handleApprove(run)}
-                  className="btn-primary flex items-center space-x-2"
-                >
-                  <CheckCircleIcon className="h-4 w-4" />
-                  <span>Approve</span>
-                </button>
+                {run.is_approved ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-500">
+                      Transfer #{run.ach_transfer_id}
+                    </span>
+                    <button
+                      onClick={() => viewAchFile(`runtime/ach/${run.run_id}.txt`)}
+                      className="btn-secondary flex items-center space-x-2"
+                    >
+                      <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                      <span>View ACH</span>
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => handleApprove(run)}
+                    className="btn-primary flex items-center space-x-2"
+                  >
+                    <CheckCircleIcon className="h-4 w-4" />
+                    <span>Approve</span>
+                  </button>
+                )}
               </div>
             ))}
           </div>

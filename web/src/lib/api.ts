@@ -121,6 +121,19 @@ export const apiClient = {
     return response.data;
   },
 
+  getReconciliationRuns: async (
+    status?: string,
+    page: number = 1,
+    limit: number = 20
+  ): Promise<{ runs: any[]; pagination: any }> => {
+    let url = `/api/tenants/demo-tenant-1/reconcile/runs?page=${page}&limit=${limit}`;
+    if (status) {
+      url += `&status=${status}`;
+    }
+    const response = await api.get(url);
+    return response.data;
+  },
+
   approveReconciliation: async (runId: number): Promise<AchTransfer> => {
     const response = await api.post(`/api/tenants/demo-tenant-1/reconcile/${runId}/approve`);
     return response.data;

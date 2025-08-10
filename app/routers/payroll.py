@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 import csv, io
 from datetime import date
 from db import get_db
-from models import PayrollBatch, PayItem
+from models_rich import PayrollBatch, PayItem, Employee
 from decorators import audit_log
 
 router = APIRouter(prefix="/api/tenants/{tenant_id}/payroll", tags=["payroll"])
@@ -40,13 +40,25 @@ async def upload_payroll(
         
         rows = 0
         for row in csv_reader:
+            employee_ext_id = row.get("employee_ext_id")
+            
+            # Try to find the employee by employee_ext_id
+            employee = db.query(Employee).filter(
+                Employee.tenant_id == tenant_id,
+                Employee.employee_ext_id == employee_ext_id
+            ).first()
+            
             pay_item = PayItem(
                 tenant_id=tenant_id,
                 payroll_batch_id=batch.id,
-                employee_ext_id=row.get("employee_ext_id"),
+                employee_id=employee.id if employee else None,
+                employee_ext_id=employee_ext_id,
                 code=row["code"],
                 amount=float(row["amount"]),
-                contribution_pct=float(row.get("contribution_pct") or 0)
+                contribution_pct=float(row.get("contribution_pct") or 0),
+                period_start=batch.period_start,
+                period_end=batch.period_end,
+                memo=f"Payroll deduction for {row['code']}"
             )
             db.add(pay_item)
             rows += 1

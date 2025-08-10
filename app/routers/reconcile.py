@@ -1,11 +1,13 @@
 # app/routers/reconcile.py
 from fastapi import APIRouter, Depends, HTTPException, Header, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from pathlib import Path
 from db import get_db
 from services.reconcile import run_reconciliation, get_reconciliation_items
-from models_rich import ReconciliationItem, AchTransfer
+from models_rich import ReconciliationItem, AchTransfer, ReconciliationRun
 from decorators import audit_log
+from datetime import datetime
 
 router = APIRouter(prefix="/api/tenants/{tenant_id}", tags=["reconcile"])
 
@@ -20,6 +22,80 @@ def reconcile(
     if tenant_id != x_tenant_id:
         raise HTTPException(400, "Tenant mismatch")
     return run_reconciliation(db, tenant_id, payroll_batch_id, actor="demo-user")
+
+@router.get("/reconcile/runs")
+def get_reconciliation_runs(
+    tenant_id: str,
+    status: str | None = Query(None, description="Filter by status"),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    x_tenant_id: str = Header(alias="X-Tenant-ID"),
+    db: Session = Depends(get_db),
+):
+    """Get reconciliation runs for review"""
+    if tenant_id != x_tenant_id:
+        raise HTTPException(400, "Tenant mismatch")
+    
+    # Build query
+    query = db.query(ReconciliationRun).filter(ReconciliationRun.tenant_id == tenant_id)
+    
+    # Apply status filter if provided
+    if status:
+        query = query.filter(ReconciliationRun.status == status)
+    
+    # Get total count
+    total_count = query.count()
+    
+    # Add pagination
+    offset = (page - 1) * limit
+    runs = query.order_by(ReconciliationRun.created_at.desc()).offset(offset).limit(limit).all()
+    
+    # Get summary data for each run
+    result = []
+    for run in runs:
+        # Count items by issue type
+        item_counts = db.query(
+            ReconciliationItem.issue_type,
+            func.count(ReconciliationItem.id).label('count')
+        ).filter(
+            ReconciliationItem.run_id == run.id
+        ).group_by(ReconciliationItem.issue_type).all()
+        
+        # Calculate total amount
+        total_amount = db.query(func.sum(ReconciliationItem.amount)).filter(
+            ReconciliationItem.run_id == run.id
+        ).scalar() or 0.0
+        
+        # Build summary
+        summary = {}
+        for item_type, count in item_counts:
+            summary[item_type] = count
+        
+        # Check if already approved
+        ach_transfer = db.query(AchTransfer).filter(AchTransfer.run_id == run.id).first()
+        
+        result.append({
+            "run_id": run.id,
+            "tenant_id": run.tenant_id,
+            "created_at": run.created_at.isoformat() if run.created_at else None,
+            "created_by": run.created_by,
+            "status": run.status,
+            "summary": summary,
+            "item_count": sum(summary.values()),
+            "total_amount": float(total_amount),
+            "is_approved": ach_transfer is not None,
+            "ach_transfer_id": ach_transfer.id if ach_transfer else None
+        })
+    
+    return {
+        "runs": result,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total_count": total_count,
+            "total_pages": (total_count + limit - 1) // limit
+        }
+    }
 
 @router.get("/reconcile/{run_id}/items")
 def list_items(
@@ -88,21 +164,23 @@ def approve(
     db.flush()  # Get the ID
     
     # Write ACH file
-    write_ach_file(run_id, items)
+    ach_dir = Path("runtime/ach")
+    ach_dir.mkdir(exist_ok=True)
+    
+    with open(ach_dir / f"{run_id}.txt", "w") as f:
+        f.write(f"ACH Transfer for Run {run_id}\n")
+        f.write(f"Total Amount: ${total_amount:.2f}\n")
+        f.write(f"Generated: {datetime.now().isoformat()}\n")
+        for item in items:
+            if item.amount:
+                f.write(f"{item.employee_ext_id},{item.issue_type},{item.amount:.2f}\n")
     
     db.commit()
+    
     return {
         "transfer_id": transfer.id,
-        "status": transfer.status,
+        "run_id": run_id,
+        "amount": total_amount,
         "file": transfer.file_ref,
-        "amount": transfer.amount
+        "status": transfer.status
     }
-
-def write_ach_file(run_id: int, items: list[ReconciliationItem]):
-    """Write ACH file to runtime/ach/ directory"""
-    Path("runtime/ach").mkdir(exist_ok=True)
-    with open(f"runtime/ach/{run_id}.txt", "w") as f:
-        f.write(f"# ACH mock file\n")
-        f.write(f"# run_id={run_id}\n")
-        for item in items:
-            f.write(f"{item.employee_ext_id},{item.issue_type},{item.actual_pct}->{item.expected_pct},{item.amount}\n")

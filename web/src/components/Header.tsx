@@ -1,11 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
 import { 
   CloudArrowUpIcon, 
   DocumentMagnifyingGlassIcon, 
   CheckCircleIcon,
   ChevronDownIcon,
-  ClipboardDocumentListIcon
+  ClipboardDocumentListIcon,
+  CommandLineIcon
 } from '@heroicons/react/24/outline';
 import { Listbox } from '@headlessui/react';
 
@@ -18,8 +18,9 @@ interface HeaderProps {
 const navigation = [
   { name: 'Upload', href: '/', icon: CloudArrowUpIcon },
   { name: 'Reconcile', href: '/reconcile', icon: DocumentMagnifyingGlassIcon },
-  { name: 'Review & Approve', href: '/review', icon: CheckCircleIcon },
-  { name: 'Audit Log', href: '/audit', icon: ClipboardDocumentListIcon },
+  { name: 'Review', href: '/review', icon: CheckCircleIcon },
+  { name: 'Audit', href: '/audit', icon: ClipboardDocumentListIcon },
+  { name: 'MCP Tools', href: '/mcp-tools', icon: CommandLineIcon },
 ];
 
 export default function Header({ selectedTenant, onTenantChange, tenants }: HeaderProps) {
@@ -28,29 +29,30 @@ export default function Header({ selectedTenant, onTenantChange, tenants }: Head
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="container mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo and Title */}
-          <div className="flex items-center space-x-4">
-            <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-gray-900">PayFast</h1>
+          {/* Left side - Logo and Tenant */}
+          <div className="flex items-center">
+            {/* Logo */}
+            <div className="flex-shrink-0 mr-8">
+              <h1 className="text-2xl font-bold text-gray-900">PayFast</h1>
             </div>
             
             {/* Tenant Selector */}
             <div className="relative">
               <Listbox value={selectedTenant} onChange={onTenantChange}>
-                <Listbox.Button className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                  <span>{selectedTenantData?.name || selectedTenant}</span>
-                  <ChevronDownIcon className="h-4 w-4" />
+                <Listbox.Button className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-300 rounded-lg hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                  <span className="truncate max-w-32">{selectedTenantData?.name || selectedTenant}</span>
+                  <ChevronDownIcon className="h-4 w-4 text-gray-400" />
                 </Listbox.Button>
-                <Listbox.Options className="absolute z-10 mt-1 w-56 bg-white shadow-lg rounded-md border border-gray-200 py-1">
+                <Listbox.Options className="absolute z-10 mt-1 w-64 bg-white shadow-lg rounded-lg border border-gray-200 py-1 max-h-60 overflow-auto">
                   {tenants.map((tenant) => (
                     <Listbox.Option
                       key={tenant.id}
                       value={tenant.id}
                       className={({ active }) =>
-                        `cursor-pointer select-none relative py-2 px-3 ${
-                          active ? 'bg-primary-50 text-primary-900' : 'text-gray-900'
+                        `cursor-pointer select-none relative py-2 px-4 text-sm ${
+                          active ? 'bg-blue-50 text-blue-900' : 'text-gray-900'
                         }`
                       }
                     >
@@ -62,21 +64,21 @@ export default function Header({ selectedTenant, onTenantChange, tenants }: Head
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex space-x-8">
+          {/* Right side - Navigation */}
+          <nav className="flex items-center space-x-1">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
                     isActive
-                      ? 'bg-primary-100 text-primary-700'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                      ? 'bg-blue-100 text-blue-700 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className="h-4 w-4" />
                   <span>{item.name}</span>
                 </Link>
               );
