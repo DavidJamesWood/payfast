@@ -1,10 +1,47 @@
-import Reconcile from './pages/Reconcile'
+import { Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import Header from './components/Header';
+import UploadPage from './pages/UploadPage';
+import ReconcilePage from './pages/ReconcilePage';
+import ReviewPage from './pages/ReviewPage';
+import { apiClient } from './lib/api';
 
-export default function App(){
+function App() {
+  const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
+  const [selectedTenant, setSelectedTenant] = useState('demo-tenant-1');
+
+  useEffect(() => {
+    const loadTenants = async () => {
+      try {
+        const tenantList = await apiClient.getTenants();
+        setTenants(tenantList);
+      } catch (error) {
+        console.error('Failed to load tenants:', error);
+      }
+    };
+    loadTenants();
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('tenantId', selectedTenant);
+  }, [selectedTenant]);
+
   return (
-    <div style={{padding:20,fontFamily:'Inter, system-ui, Arial'}}>
-      <h1>Payroll Reconciliation MVP</h1>
-      <Reconcile />
+    <div className="min-h-screen bg-gray-50">
+      <Header 
+        selectedTenant={selectedTenant}
+        onTenantChange={setSelectedTenant}
+        tenants={tenants}
+      />
+      <main className="container mx-auto px-4 py-8">
+        <Routes>
+          <Route path="/" element={<UploadPage />} />
+          <Route path="/reconcile" element={<ReconcilePage />} />
+          <Route path="/review" element={<ReviewPage />} />
+        </Routes>
+      </main>
     </div>
-  )
+  );
 }
+
+export default App;
