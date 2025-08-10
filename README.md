@@ -4,7 +4,6 @@ This is a minimal, demo-ready scaffold to show ingestion → reconciliation → 
 
 ## Quick start (local)
 
-```bash
 # 0) prerequisites: Docker Desktop, Node 20, Python 3.11, Azure CLI
 
 # 1) install web deps once (Vite skeleton)
