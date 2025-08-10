@@ -5,11 +5,14 @@ import {
   ExclamationTriangleIcon,
   DocumentTextIcon,
   EyeIcon,
-  ArrowTopRightOnSquareIcon
+  ArrowTopRightOnSquareIcon,
+  ChevronDownIcon,
+  ChevronUpIcon
 } from '@heroicons/react/24/outline';
 import { Dialog } from '@headlessui/react';
 import toast from 'react-hot-toast';
-import { apiClient, ReconciliationRun, AchTransfer } from '../lib/api';
+import { apiClient, ReconciliationRun, AchTransfer, ReconciliationInsights } from '../lib/api';
+import InsightsCard from '../components/InsightsCard';
 
 interface PendingRun extends ReconciliationRun {
   itemCount: number;
@@ -28,6 +31,9 @@ export default function ReviewPage() {
   const [isApproving, setIsApproving] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [approvedTransfer, setApprovedTransfer] = useState<AchTransfer | null>(null);
+  const [expandedRuns, setExpandedRuns] = useState<Set<number>>(new Set());
+  const [insights, setInsights] = useState<Record<number, ReconciliationInsights>>({});
+  const [loadingInsights, setLoadingInsights] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadPendingRuns();
@@ -85,6 +91,36 @@ export default function ReviewPage() {
   const viewAchFile = (filePath: string) => {
     // In a real app, this would open the file in a new tab or download it
     window.open(`http://localhost:8000/${filePath}`, '_blank');
+  };
+
+  const toggleRunExpansion = async (runId: number) => {
+    const newExpandedRuns = new Set(expandedRuns);
+    if (newExpandedRuns.has(runId)) {
+      newExpandedRuns.delete(runId);
+    } else {
+      newExpandedRuns.add(runId);
+      // Load insights if not already loaded
+      if (!insights[runId] && !loadingInsights.has(runId)) {
+        await loadInsights(runId);
+      }
+    }
+    setExpandedRuns(newExpandedRuns);
+  };
+
+  const loadInsights = async (runId: number) => {
+    setLoadingInsights(prev => new Set(prev).add(runId));
+    try {
+      const insightsData = await apiClient.getReconciliationInsights(runId);
+      setInsights(prev => ({ ...prev, [runId]: insightsData }));
+    } catch (error) {
+      toast.error('Failed to load insights');
+    } finally {
+      setLoadingInsights(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(runId);
+        return newSet;
+      });
+    }
   };
 
   return (
@@ -159,76 +195,105 @@ export default function ReviewPage() {
         ) : (
           <div className="space-y-4">
             {pendingRuns.map((run) => (
-              <div
-                key={run.run_id}
-                className={`flex items-center justify-between p-6 rounded-lg border ${
-                  run.is_approved 
-                    ? 'bg-green-50 border-green-200' 
-                    : 'bg-gray-50 border-gray-200'
-                }`}
-              >
-                <div className="flex items-center space-x-6">
-                  <div className="flex items-center space-x-3">
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                      run.is_approved ? 'bg-green-100' : 'bg-primary-100'
-                    }`}>
-                      <span className={`font-semibold ${
-                        run.is_approved ? 'text-green-700' : 'text-primary-700'
-                      }`}>#{run.run_id}</span>
+              <div key={run.run_id} className="space-y-4">
+                <div
+                  className={`flex items-center justify-between p-6 rounded-lg border ${
+                    run.is_approved 
+                      ? 'bg-green-50 border-green-200' 
+                      : 'bg-gray-50 border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-3">
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                        run.is_approved ? 'bg-green-100' : 'bg-primary-100'
+                      }`}>
+                        <span className={`font-semibold ${
+                          run.is_approved ? 'text-green-700' : 'text-primary-700'
+                        }`}>#{run.run_id}</span>
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">
+                          Reconciliation Run #{run.run_id}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {run.created_at && `Created ${new Date(run.created_at).toLocaleDateString()}`}
+                          {run.created_by && ` by ${run.created_by}`}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {Object.values(run.summary).reduce((a, b) => a + b, 0)} discrepancies found
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-medium text-gray-900">
-                        Reconciliation Run #{run.run_id}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {run.created_at && `Created ${new Date(run.created_at).toLocaleDateString()}`}
-                        {run.created_by && ` by ${run.created_by}`}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {Object.values(run.summary).reduce((a, b) => a + b, 0)} discrepancies found
-                      </p>
+                    
+                    <div className="flex items-center space-x-6 text-sm">
+                      <div>
+                        <span className="text-gray-500">Items:</span>
+                        <span className="ml-1 font-medium text-gray-900">{run.itemCount}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Total Amount:</span>
+                        <span className="ml-1 font-medium text-gray-900">${run.totalAmount.toFixed(2)}</span>
+                      </div>
+                      {run.is_approved && (
+                        <div className="flex items-center space-x-2">
+                          <CheckCircleIcon className="h-4 w-4 text-green-600" />
+                          <span className="text-green-600 font-medium">Approved</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-6 text-sm">
-                    <div>
-                      <span className="text-gray-500">Items:</span>
-                      <span className="ml-1 font-medium text-gray-900">{run.itemCount}</span>
+                  {run.is_approved ? (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-500">
+                        Transfer #{run.ach_transfer_id}
+                      </span>
+                      <button
+                        onClick={() => viewAchFile(`runtime/ach/${run.run_id}.txt`)}
+                        className="btn-secondary flex items-center space-x-2"
+                      >
+                        <ArrowTopRightOnSquareIcon className="h-4 w-4" />
+                        <span>View ACH</span>
+                      </button>
                     </div>
-                    <div>
-                      <span className="text-gray-500">Total Amount:</span>
-                      <span className="ml-1 font-medium text-gray-900">${run.totalAmount.toFixed(2)}</span>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => toggleRunExpansion(run.run_id)}
+                        className="btn-secondary flex items-center space-x-2"
+                      >
+                        {expandedRuns.has(run.run_id) ? (
+                          <ChevronUpIcon className="h-4 w-4" />
+                        ) : (
+                          <ChevronDownIcon className="h-4 w-4" />
+                        )}
+                        <span>Insights</span>
+                      </button>
+                      <button
+                        onClick={() => handleApprove(run)}
+                        className="btn-primary flex items-center space-x-2"
+                      >
+                        <CheckCircleIcon className="h-4 w-4" />
+                        <span>Approve</span>
+                      </button>
                     </div>
-                    {run.is_approved && (
-                      <div className="flex items-center space-x-2">
-                        <CheckCircleIcon className="h-4 w-4 text-green-600" />
-                        <span className="text-green-600 font-medium">Approved</span>
+                  )}
+                </div>
+                
+                {/* Insights Card */}
+                {expandedRuns.has(run.run_id) && (
+                  <div className="ml-6">
+                    {loadingInsights.has(run.run_id) ? (
+                      <InsightsCard insights={{} as ReconciliationInsights} isLoading={true} />
+                    ) : insights[run.run_id] ? (
+                      <InsightsCard insights={insights[run.run_id]} />
+                    ) : (
+                      <div className="text-center py-4 text-gray-500">
+                        Failed to load insights
                       </div>
                     )}
                   </div>
-                </div>
-                
-                {run.is_approved ? (
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-500">
-                      Transfer #{run.ach_transfer_id}
-                    </span>
-                    <button
-                      onClick={() => viewAchFile(`runtime/ach/${run.run_id}.txt`)}
-                      className="btn-secondary flex items-center space-x-2"
-                    >
-                      <ArrowTopRightOnSquareIcon className="h-4 w-4" />
-                      <span>View ACH</span>
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleApprove(run)}
-                    className="btn-primary flex items-center space-x-2"
-                  >
-                    <CheckCircleIcon className="h-4 w-4" />
-                    <span>Approve</span>
-                  </button>
                 )}
               </div>
             ))}

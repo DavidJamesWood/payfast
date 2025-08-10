@@ -283,6 +283,15 @@ def run_reconciliation(db: Session, tenant_id: str, payroll_batch_id: int, actor
     
     db.commit()
     
+    # Generate insights asynchronously (don't block the reconciliation)
+    try:
+        from services.insights import create_reconciliation_insights
+        create_reconciliation_insights(db, run.id, tenant_id)
+    except Exception as e:
+        # Log error but don't fail the reconciliation
+        print(f"Failed to generate insights for run {run.id}: {e}")
+        # Could add to event log here
+    
     return {
         "run_id": run.id,
         "summary": dict(summary),

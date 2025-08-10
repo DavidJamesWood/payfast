@@ -5,6 +5,7 @@ from sqlalchemy import func
 from pathlib import Path
 from db import get_db
 from services.reconcile import run_reconciliation, get_reconciliation_items
+from services.insights import get_reconciliation_insights, create_reconciliation_insights
 from models_rich import ReconciliationItem, AchTransfer, ReconciliationRun
 from decorators import audit_log
 from datetime import datetime
@@ -184,3 +185,30 @@ def approve(
         "file": transfer.file_ref,
         "status": transfer.status
     }
+
+@router.get("/reconcile/{run_id}/insights")
+def get_insights(
+    tenant_id: str,
+    run_id: int,
+    x_tenant_id: str = Header(alias="X-Tenant-ID"),
+    db: Session = Depends(get_db),
+):
+    """Get insights for a reconciliation run"""
+    if tenant_id != x_tenant_id:
+        raise HTTPException(400, "Tenant mismatch")
+    
+    # Try to get existing insights
+    insights = get_reconciliation_insights(db, run_id, tenant_id)
+    
+    # If no insights exist, create them
+    if not insights:
+        try:
+            create_reconciliation_insights(db, run_id, tenant_id)
+            insights = get_reconciliation_insights(db, run_id, tenant_id)
+        except Exception as e:
+            raise HTTPException(500, f"Failed to generate insights: {str(e)}")
+    
+    if not insights:
+        raise HTTPException(404, "Insights not found")
+    
+    return insights

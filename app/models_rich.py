@@ -153,6 +153,7 @@ class ReconciliationRun(Base):
     # payroll_batch: Mapped["PayrollBatch"] = relationship(back_populates="reconciliation_runs")
     # reconciliation_items: Mapped[List["ReconciliationItem"]] = relationship(back_populates="reconciliation_run")
     # ach_transfers: Mapped[List["AchTransfer"]] = relationship(back_populates="reconciliation_run")
+    insights: Mapped[Optional["ReconciliationInsights"]] = relationship(back_populates="run")
 
 class ReconciliationItem(Base):
     """Individual reconciliation discrepancies"""
@@ -186,6 +187,30 @@ class AchTransfer(Base):
     
     # Relationships - commented out for now
     # reconciliation_run: Mapped["ReconciliationRun"] = relationship(back_populates="ach_transfers")
+
+class ReconciliationInsights(Base):
+    __tablename__ = "reconciliation_insights"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    run_id: Mapped[int] = mapped_column(ForeignKey("reconciliation_run.id"), nullable=False)
+    tenant_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    
+    # Computed statistics
+    top_causes: Mapped[Optional[str]] = mapped_column(JSON, nullable=True)  # {"missing_coverage": 45, "mismatch_pct": 12}
+    total_impact: Mapped[Optional[float]] = mapped_column(Float, nullable=True)  # Total dollar impact
+    affected_employees: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Number of unique employees affected
+    
+    # LLM-generated insights
+    suggested_fixes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # LLM suggestions for batch fixes
+    priority_actions: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # High-priority actions to take
+    risk_assessment: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Risk level and assessment
+    
+    # Metadata
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    
+    # Relationship
+    run: Mapped["ReconciliationRun"] = relationship(back_populates="insights")
 
 # ============================================================================
 # AUDIT AND EVENT LOGGING

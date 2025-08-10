@@ -54,6 +54,18 @@ export interface ReconciliationItemsResponse {
   offset: number;
 }
 
+export interface ReconciliationInsights {
+  id: number;
+  run_id: number;
+  top_causes: Record<string, number>;
+  total_impact: number;
+  affected_employees: number;
+  suggested_fixes: string[];
+  priority_actions: string[];
+  risk_assessment: string;
+  created_at: string;
+}
+
 export interface AchTransfer {
   transfer_id: number;
   status: string;
@@ -157,6 +169,11 @@ export const apiClient = {
 
   approveReconciliation: async (runId: number): Promise<AchTransfer> => {
     const response = await api.post(`/api/tenants/demo-tenant-1/reconcile/${runId}/approve`);
+    return response.data;
+  },
+
+  getReconciliationInsights: async (runId: number): Promise<ReconciliationInsights> => {
+    const response = await api.get(`/api/tenants/demo-tenant-1/reconcile/${runId}/insights`);
     return response.data;
   },
 
