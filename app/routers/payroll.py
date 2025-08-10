@@ -4,10 +4,12 @@ import csv, io
 from datetime import date
 from db import get_db
 from models import PayrollBatch, PayItem
+from decorators import audit_log
 
 router = APIRouter(prefix="/api/tenants/{tenant_id}/payroll", tags=["payroll"])
 
 @router.post("/upload")
+@audit_log(action="create", entity="payroll_batch")
 async def upload_payroll(
     tenant_id: str,
     file: UploadFile = File(...),

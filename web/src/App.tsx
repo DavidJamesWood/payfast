@@ -4,6 +4,7 @@ import Header from './components/Header';
 import UploadPage from './pages/UploadPage';
 import ReconcilePage from './pages/ReconcilePage';
 import ReviewPage from './pages/ReviewPage';
+import AuditPage from './pages/AuditPage';
 import { apiClient } from './lib/api';
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
           <Route path="/" element={<UploadPage />} />
           <Route path="/reconcile" element={<ReconcilePage />} />
           <Route path="/review" element={<ReviewPage />} />
+          <Route path="/audit" element={<AuditPage />} />
         </Routes>
       </main>
     </div>

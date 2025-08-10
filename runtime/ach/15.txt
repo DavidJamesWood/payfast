@@ -1,0 +1,7 @@
+# ACH mock file
+# run_id=15
+EMP001,missing_coverage,0.03->None,150.0
+EMP002,missing_coverage,0.04->None,200.0
+EMP003,missing_coverage,0.02->None,100.0
+EMP004,missing_coverage,0.0->None,0.0
+EMP005,missing_coverage,0.05->None,300.0

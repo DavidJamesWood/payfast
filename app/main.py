@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from routers import payroll, reconcile
+from routers import payroll, reconcile, audit
 from dependencies import get_tenant_id
 
 app = FastAPI(title="PayFast API")
@@ -21,6 +21,7 @@ def healthz():
 
 app.include_router(payroll.router)
 app.include_router(reconcile.router)
+app.include_router(audit.router)
 
 # --- DTOs (replace with real models/services later) ---
 class PayrollRow(BaseModel):

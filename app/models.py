@@ -1,5 +1,5 @@
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy import String, Float, ForeignKey, Date, Integer, DateTime
+from sqlalchemy import String, Float, ForeignKey, Date, Integer, DateTime, Text
 from typing import Optional
 from datetime import date, datetime
 
@@ -64,5 +64,17 @@ class AchTransfer(Base):
     amount: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     file_ref: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, default="submitted")
+
+class AuditLog(Base):
+    __tablename__ = "audit_log"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tenant_id: Mapped[str] = mapped_column(String, nullable=False)
+    actor: Mapped[str] = mapped_column(String, nullable=False)
+    action: Mapped[str] = mapped_column(String, nullable=False)  # create, update, delete
+    entity: Mapped[str] = mapped_column(String, nullable=False)  # payroll_batch, reconciliation_run, ach_transfer
+    entity_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    before: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # JSON string of previous state
+    after: Mapped[Optional[str]] = mapped_column(Text, nullable=True)   # JSON string of new state
+    at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 

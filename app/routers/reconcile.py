@@ -5,10 +5,12 @@ from pathlib import Path
 from db import get_db
 from services.reconcile import run_reconciliation
 from models import ReconciliationItem, AchTransfer
+from decorators import audit_log
 
 router = APIRouter(prefix="/api/tenants/{tenant_id}", tags=["reconcile"])
 
 @router.post("/reconcile")
+@audit_log(action="create", entity="reconciliation_run")
 def reconcile(
     tenant_id: str,
     payroll_batch_id: int = Query(...),
@@ -48,6 +50,7 @@ def list_items(
     ]
 
 @router.post("/reconcile/{run_id}/approve")
+@audit_log(action="create", entity="ach_transfer")
 def approve(
     tenant_id: str,
     run_id: int,

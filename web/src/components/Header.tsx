@@ -4,7 +4,8 @@ import {
   CloudArrowUpIcon, 
   DocumentMagnifyingGlassIcon, 
   CheckCircleIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  ClipboardDocumentListIcon
 } from '@heroicons/react/24/outline';
 import { Listbox } from '@headlessui/react';
 
@@ -18,6 +19,7 @@ const navigation = [
   { name: 'Upload', href: '/', icon: CloudArrowUpIcon },
   { name: 'Reconcile', href: '/reconcile', icon: DocumentMagnifyingGlassIcon },
   { name: 'Review & Approve', href: '/review', icon: CheckCircleIcon },
+  { name: 'Audit Log', href: '/audit', icon: ClipboardDocumentListIcon },
 ];
 
 export default function Header({ selectedTenant, onTenantChange, tenants }: HeaderProps) {
