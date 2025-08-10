@@ -15,6 +15,15 @@ This document explains how to set up environment variables for the PayFast appli
    nano .env
    ```
 
+3. **Add your OpenAI API key securely:**
+   ```bash
+   # Use the secure utility (recommended)
+   python add_openai_key.py
+   
+   # Or manually edit the .env file
+   nano .env
+   ```
+
 ## Environment Variables
 
 ### Required Variables
@@ -37,6 +46,14 @@ This document explains how to set up environment variables for the PayFast appli
 - `ENVIRONMENT`: Set to "production" for production environment
 - `DEBUG`: Set to "false" in production
 - `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
+
+### LLM Configuration
+
+- `LLM_PROVIDER`: LLM provider (default: "openai")
+- `LLM_MODEL`: Model name (default: "gpt-4o-mini")
+- `OPENAI_API_KEY`: Your OpenAI API key (required for LLM functionality)
+  - Get your API key from: https://platform.openai.com/api-keys
+  - **Never commit this key to version control!**
 
 ## Security Best Practices
 
@@ -73,6 +90,11 @@ DEBUG=true
 
 # CORS Origins
 ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+
+# LLM Configuration
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-4o-mini
+OPENAI_API_KEY=sk-your-actual-openai-api-key-here
 ```
 
 ## Troubleshooting

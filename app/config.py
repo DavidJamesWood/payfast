@@ -24,6 +24,11 @@ class Settings:
     # API Keys (add as needed)
     # EXTERNAL_API_KEY: str = os.getenv("EXTERNAL_API_KEY", "")
     
+    # LLM Configuration
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "openai")
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-4o-mini")
+    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    
     @classmethod
     def validate(cls) -> None:
         """Validate that required environment variables are set"""
