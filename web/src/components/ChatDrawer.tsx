@@ -14,7 +14,6 @@ interface Message {
   id: string;
   query: string;
   summary: string;
-  sql_query: string;
   mcp_result: {
     success: boolean;
     data?: any[];
@@ -72,7 +71,6 @@ export default function ChatDrawer({ isOpen, onClose }: ChatDrawerProps) {
       id: messageId,
       query,
       summary: '',
-      sql_query: '',
       mcp_result: { success: false },
       corrections_made: 0,
       final_success: false,
@@ -219,19 +217,21 @@ export default function ChatDrawer({ isOpen, onClose }: ChatDrawerProps) {
               <div className="flex justify-start">
                 <div className="bg-gray-100 rounded-lg px-4 py-3 max-w-xs">
                   {/* Summary */}
-                  <p className="text-sm text-gray-900 mb-2">
-                    {message.summary || (isLoading && currentRequestId === message.id ? 'Thinking...' : 'No response')}
-                  </p>
-
-                  {/* SQL Query */}
-                  {message.sql_query && (
-                    <div className="mb-2">
-                      <p className="text-xs text-gray-600 font-medium mb-1">SQL Query:</p>
-                      <code className="text-xs bg-gray-200 px-2 py-1 rounded block overflow-x-auto">
-                        {message.sql_query}
-                      </code>
-                    </div>
-                  )}
+                  <div className="mb-2">
+                    {message.summary ? (
+                      <div className="text-sm text-gray-900">
+                        {message.summary.split('\n').map((line, index) => (
+                          <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-900">
+                        {isLoading && currentRequestId === message.id ? 'Thinking...' : 'No response'}
+                      </p>
+                    )}
+                  </div>
 
                   {/* Results Table */}
                   {message.mcp_result.success && message.mcp_result.data && message.mcp_result.data.length > 0 && (

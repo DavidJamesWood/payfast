@@ -7,7 +7,7 @@ import UploadPage from './pages/UploadPage';
 import ReconcilePage from './pages/ReconcilePage';
 import ReviewPage from './pages/ReviewPage';
 import AuditPage from './pages/AuditPage';
-import MCPToolsPage from './pages/MCPToolsPage';
+
 import { apiClient } from './lib/api';
 
 function App() {
@@ -45,7 +45,7 @@ function App() {
           <Route path="/reconcile" element={<ReconcilePage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/audit" element={<AuditPage />} />
-          <Route path="/mcp-tools" element={<MCPToolsPage />} />
+
           <Route path="/chat-test" element={<ChatTest />} />
         </Routes>
       </main>

@@ -5,7 +5,6 @@ import {
   CheckCircleIcon,
   ChevronDownIcon,
   ClipboardDocumentListIcon,
-  CommandLineIcon,
   ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
 import { Listbox } from '@headlessui/react';
@@ -22,7 +21,6 @@ const navigation = [
   { name: 'Reconcile', href: '/reconcile', icon: DocumentMagnifyingGlassIcon },
   { name: 'Review', href: '/review', icon: CheckCircleIcon },
   { name: 'Audit', href: '/audit', icon: ClipboardDocumentListIcon },
-  { name: 'MCP Tools', href: '/mcp-tools', icon: CommandLineIcon },
 ];
 
 export default function Header({ selectedTenant, onTenantChange, tenants, onChatToggle }: HeaderProps) {
