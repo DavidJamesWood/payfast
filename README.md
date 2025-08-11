@@ -1,6 +1,13 @@
 # PayFast - Payroll Reconciliation Platform
 
-> **🎬 [Watch the High-Quality Demo Video](demo/test-results/enhanced-demo-PayFast-Enha-7c808-with-visual-cues-and-pacing-chromium/video.webm)** - See PayFast in action with AI-powered reconciliation, real-time processing, and comprehensive audit trails. *(1920x1080, 2x device scale factor)*
+## 🎬 **Watch PayFast in Action**
+
+<video width="100%" controls>
+  <source src="demo/test-results/enhanced-demo-PayFast-Enha-7c808-with-visual-cues-and-pacing-chromium/video.webm" type="video/webm">
+  Your browser does not support the video tag. [Download Video](demo/test-results/enhanced-demo-PayFast-Enha-7c808-with-visual-cues-and-pacing-chromium/video.webm)
+</video>
+
+*High-quality demo showcasing AI-powered reconciliation, real-time processing, and comprehensive audit trails (1920x1080, 2x device scale factor)*
 
 ## 🚀 Project Overview
 
