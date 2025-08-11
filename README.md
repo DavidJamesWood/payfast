@@ -2,12 +2,11 @@
 
 ## 🎬 **Watch PayFast in Action**
 
-<video width="100%" controls>
-  <source src="demo/test-results/enhanced-demo-PayFast-Enha-7c808-with-visual-cues-and-pacing-chromium/video.webm" type="video/webm">
-  Your browser does not support the video tag. [Download Video](demo/test-results/enhanced-demo-PayFast-Enha-7c808-with-visual-cues-and-pacing-chromium/video.webm)
-</video>
+![PayFast Demo Screenshot](demo/demo/screenshots/01-upload-complete.png)
 
-*High-quality demo showcasing AI-powered reconciliation, real-time processing, and comprehensive audit trails (1920x1080, 2x device scale factor)*
+**🎬 [Watch the Full Demo Video](demo/test-results/enhanced-demo-PayFast-Enha-7c808-with-visual-cues-and-pacing-chromium/video.webm)** *(8.7MB, 1920x1080, 1.4 minutes)*
+
+*High-quality demo showcasing AI-powered reconciliation, real-time processing, and comprehensive audit trails*
 
 ## 🚀 Project Overview
 
