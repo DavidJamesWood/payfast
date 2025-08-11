@@ -17,7 +17,11 @@ interface SummaryStats {
   total: number;
 }
 
-export default function ReconcilePage() {
+interface ReconcilePageProps {
+  isDemoMode?: boolean;
+}
+
+export default function ReconcilePage({ isDemoMode = false }: ReconcilePageProps) {
   const [batches, setBatches] = useState<PayrollBatch[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<number | null>(null);
   const [reconciliationRun, setReconciliationRun] = useState<any>(null);

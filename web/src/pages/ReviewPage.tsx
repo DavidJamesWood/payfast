@@ -24,7 +24,11 @@ interface PendingRun extends ReconciliationRun {
   ach_transfer_id?: number;
 }
 
-export default function ReviewPage() {
+interface ReviewPageProps {
+  isDemoMode?: boolean;
+}
+
+export default function ReviewPage({ isDemoMode = false }: ReviewPageProps) {
   const [pendingRuns, setPendingRuns] = useState<PendingRun[]>([]);
   const [selectedRun, setSelectedRun] = useState<PendingRun | null>(null);
   const [isLoading, setIsLoading] = useState(true);

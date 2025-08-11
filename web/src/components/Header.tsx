@@ -14,6 +14,7 @@ interface HeaderProps {
   onTenantChange: (tenantId: string) => void;
   tenants: { id: string; name: string }[];
   onChatToggle: () => void;
+  isDemoMode?: boolean;
 }
 
 const navigation = [
@@ -23,14 +24,20 @@ const navigation = [
   { name: 'Audit', href: '/audit', icon: ClipboardDocumentListIcon },
 ];
 
-export default function Header({ selectedTenant, onTenantChange, tenants, onChatToggle }: HeaderProps) {
+export default function Header({ selectedTenant, onTenantChange, tenants, onChatToggle, isDemoMode = false }: HeaderProps) {
   const location = useLocation();
   const selectedTenantData = tenants.find(t => t.id === selectedTenant);
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="bg-white shadow-sm border-b border-gray-200 relative">
+      {/* Demo Mode Ribbon */}
+      {isDemoMode && (
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-1 rounded-b-lg shadow-lg z-10">
+          <span className="text-sm font-semibold">🎬 DEMO MODE</span>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className={`flex items-center justify-between ${isDemoMode ? 'h-20' : 'h-16'}`}>
           {/* Left side - Logo and Tenant */}
           <div className="flex items-center">
             {/* Logo */}

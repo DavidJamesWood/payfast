@@ -14,6 +14,14 @@ function App() {
   const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
   const [selectedTenant, setSelectedTenant] = useState('demo-tenant-1');
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  
+  // Check for demo mode
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isDemo = urlParams.get('demo') === '1' || import.meta.env.VITE_DEMO === '1';
+    setIsDemoMode(isDemo);
+  }, []);
 
   useEffect(() => {
     const loadTenants = async () => {
@@ -38,13 +46,14 @@ function App() {
         onTenantChange={setSelectedTenant}
         tenants={tenants}
         onChatToggle={() => setIsChatOpen(!isChatOpen)}
+        isDemoMode={isDemoMode}
       />
       <main className="container mx-auto px-4 py-8">
         <Routes>
-          <Route path="/" element={<UploadPage />} />
-          <Route path="/reconcile" element={<ReconcilePage />} />
-          <Route path="/review" element={<ReviewPage />} />
-          <Route path="/audit" element={<AuditPage />} />
+          <Route path="/" element={<UploadPage isDemoMode={isDemoMode} />} />
+          <Route path="/reconcile" element={<ReconcilePage isDemoMode={isDemoMode} />} />
+          <Route path="/review" element={<ReviewPage isDemoMode={isDemoMode} />} />
+          <Route path="/audit" element={<AuditPage isDemoMode={isDemoMode} />} />
 
           <Route path="/chat-test" element={<ChatTest />} />
         </Routes>

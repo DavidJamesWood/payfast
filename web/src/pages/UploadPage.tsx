@@ -10,7 +10,11 @@ import {
 import toast from 'react-hot-toast';
 import { apiClient, PayrollBatch } from '../lib/api';
 
-export default function UploadPage() {
+interface UploadPageProps {
+  isDemoMode?: boolean;
+}
+
+export default function UploadPage({ isDemoMode = false }: UploadPageProps) {
   const [batches, setBatches] = useState<PayrollBatch[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoadingBatches, setIsLoadingBatches] = useState(true);
@@ -70,6 +74,18 @@ export default function UploadPage() {
         </p>
       </div>
 
+      {/* Demo Mode Notice */}
+      {isDemoMode && (
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center space-x-2">
+            <span className="text-purple-600">🎬</span>
+            <p className="text-purple-800 font-medium">
+              Demo Mode: Use the sample payroll file below to see the full reconciliation flow
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Upload Area */}
       <div className="card">
         <div
@@ -96,6 +112,18 @@ export default function UploadPage() {
                   <span className="font-medium text-primary-600">Click to upload</span> or drag and drop
                 </p>
                 <p className="text-sm text-gray-500 mt-1">CSV files only</p>
+                {isDemoMode && (
+                  <div className="mt-3">
+                    <a
+                      href="/sample/payroll.csv"
+                      download
+                      className="inline-flex items-center space-x-1 text-sm text-purple-600 hover:text-purple-700 font-medium"
+                    >
+                      <DocumentTextIcon className="h-4 w-4" />
+                      <span>Download Sample Payroll File</span>
+                    </a>
+                  </div>
+                )}
               </div>
             )}
           </div>

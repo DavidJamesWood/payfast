@@ -9,7 +9,11 @@ import {
 import toast from 'react-hot-toast';
 import { apiClient, AuditLog, AuditSummary } from '../lib/api';
 
-export default function AuditPage() {
+interface AuditPageProps {
+  isDemoMode?: boolean;
+}
+
+export default function AuditPage({ isDemoMode = false }: AuditPageProps) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [summary, setSummary] = useState<AuditSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);

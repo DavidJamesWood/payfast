@@ -1,7 +1,7 @@
 # PayFast - Makefile
 # A comprehensive build system for the PayFast payroll reconciliation application
 
-.PHONY: help build up down restart logs clean test migrate seed api-logs web-logs db-logs audit-logs shell-api shell-web shell-db format lint check
+.PHONY: help build up down restart logs clean test migrate seed api-logs web-logs db-logs audit-logs shell-api shell-web shell-db format lint check demo
 
 # Default target
 help: ## Show this help message
@@ -100,6 +100,29 @@ check: ## Run all code quality checks
 	$(MAKE) format
 	$(MAKE) lint
 	$(MAKE) test
+
+## Demo
+demo: ## Run the complete PayFast demo with video and report
+	@echo "🎬 Starting PayFast Demo..."
+	@cd demo && ./run-demo.sh
+
+demo-video: ## Run the PayFast demo with video recording enabled
+	@echo "🎬 Starting PayFast Demo with Video Recording..."
+	@cd demo && npx playwright test simple-demo.spec.ts
+
+demo-enhanced: ## Run the enhanced PayFast demo with visual cues and better pacing
+	@echo "🎬 Starting Enhanced PayFast Demo with Visual Cues..."
+	@echo "✨ Features: Step indicators, explanatory pauses, visual highlights, professional pacing"
+	@echo "📋 Includes: Upload, Reconcile, Review, AI Insights, AI Chat, Audit Summary"
+	@echo "🤖 AI Assistant: Real question asking, processing, and response demonstration"
+	@cd demo && npx playwright test enhanced-demo.spec.ts
+
+demo-enhanced-hq: ## Run the enhanced PayFast demo in high quality (headed mode)
+	@echo "🎬 Starting High-Quality Enhanced PayFast Demo..."
+	@echo "✨ Features: 1920x1080 resolution, 2x device scale factor, headed mode"
+	@echo "📋 Includes: Upload, Reconcile, Review, AI Insights, AI Chat, Audit Summary"
+	@echo "🤖 AI Assistant: Real question asking, processing, and response demonstration"
+	@cd demo && npx playwright test enhanced-demo.spec.ts --headed --project=chromium
 
 # API Testing
 test-upload: ## Test payroll upload API
