@@ -1,0 +1,20 @@
+{
+  "name": "payfast-demo",
+  "version": "1.0.0",
+  "description": "PayFast Demo Automation",
+  "scripts": {
+    "install": "npx playwright install chromium",
+    "demo": "npx playwright test payfast-demo.spec.ts --headed --project=chromium",
+    "demo:headless": "npx playwright test payfast-demo.spec.ts --project=chromium",
+    "demo:video": "npx playwright test payfast-demo.spec.ts --project=chromium --video=on",
+    "demo:enhanced": "npx playwright test enhanced-demo.spec.ts",
+    "demo:enhanced:headed": "npx playwright test enhanced-demo.spec.ts --headed",
+    "demo:enhanced:hq": "npx playwright test enhanced-demo.spec.ts --headed --project=chromium",
+    "report": "npx playwright show-report",
+    "clean": "rm -rf screenshots reports test-results"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^24.2.1"
+  }
+}

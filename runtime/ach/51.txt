@@ -1,0 +1,10 @@
+ACH Transfer for Run 51
+Total Amount: $1195.00
+Generated: 2025-08-11T01:18:14.858922
+EMP1001,mismatch_pct,150.00
+EMP1002,missing_coverage,200.00
+EMP1003,mismatch_pct,100.00
+EMP1005,missing_coverage,300.00
+EMP1006,missing_coverage,250.00
+EMP1007,missing_coverage,75.00
+EMP1008,missing_coverage,120.00

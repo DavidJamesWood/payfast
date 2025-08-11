@@ -1,0 +1,5 @@
+# ACH mock file
+# run_id=1
+UNKNOWN,extra_deduction,0.03->None,150.0
+UNKNOWN,extra_deduction,0.0->None,0.0
+UNKNOWN,extra_deduction,0.04->None,200.0
